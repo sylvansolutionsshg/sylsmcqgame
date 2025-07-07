@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCQ Game: Who Wants to Be a Millionaire</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- SheetJS for reading Excel files -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- Google Fonts: Inter for modern text, Press Start 2P for retro accents -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        /* Custom styles for Premium Chic Design with Minimal Shadows */
+        body {
+            font-family: 'Inter', sans-serif; /* Modern, clean font for general text */
+            background-color: #1a1a1a; /* Dark charcoal */
+            /* Layered background for subtle geometric pattern and gradient */
+            background-image:
+                repeating-linear-gradient(0deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 15px),
+                repeating-linear-gradient(90deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 15px),
+                linear-gradient(180deg, #1a1a1a 0%, #222222 100%); /* Subtle vertical gradient */
+            color: #e0e0e0; /* Light gray for general text */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden; /* Prevent horizontal scroll */
+            text-shadow: none; /* No general text shadow */
+        }
+
+        .game-container {
+            background-color: #2a2a2a; /* Slightly lighter charcoal */
+            background-image: linear-gradient(145deg, #2a2a2a 0%, #3a3a3a 100%); /* Subtle gradient */
+            border-radius: 1rem; /* Softly rounded corners */
+            border: 1px solid rgba(255,255,255,0.1); /* Very thin, subtle border */
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4); /* Soft, diffused shadow */
+            padding: 3rem;
+            width: 95%;
+            max-width: 1200px;
+            min-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .section {
+            display: none; /* Hidden by default */
+            width: 100%;
+            height: 100%;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 1rem;
+        }
+        .section.active {
+            display: flex; /* Show active section */
+        }
+        .btn {
+            /* Adjusted for better contrast */
+            @apply bg-gradient-to-br from-gray-700 to-gray-800 hover:from-gray-800 hover:to-gray-900 text-white font-semibold py-3 px-8 rounded-lg transition duration-200 ease-in-out transform hover:translate-y-[-2px] focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50;
+            border: none;
+            color: #f0f0f0; /* Brighter white for contrast */
+            text-shadow: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3); /* Slightly more pronounced shadow for depth */
+        }
+        .btn-green {
+            /* Adjusted for better contrast */
+            @apply bg-gradient-to-br from-green-700 to-green-800 hover:from-green-800 hover:to-green-900 text-white font-semibold py-3 px-8 rounded-lg transition duration-200 ease-in-out transform hover:translate-y-[-2px] focus:outline-none focus:ring-2 focus:ring-green-600 focus:ring-opacity-50;
+            border: none;
+            color: #f0f0f0; /* Brighter white for contrast */
+            text-shadow: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+        .btn-red {
+            /* Adjusted for better contrast */
+            @apply bg-gradient-to-br from-red-700 to-red-800 hover:from-red-800 hover:to-red-900 text-white font-semibold py-3 px-8 rounded-lg transition duration-200 ease-in-out transform hover:translate-y-[-2px] focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-opacity-50;
+            border: none;
+            color: #f0f0f0; /* Brighter white for contrast */
+            text-shadow: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+        .btn-yellow {
+            /* Adjusted for better contrast - vibrant yellow background with white text */
+            @apply bg-gradient-to-br from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-white font-semibold py-2 px-5 rounded-md transition duration-200 ease-in-out transform hover:translate-y-[-1px] focus:outline-none focus:ring-2 focus:ring-yellow-300 focus:ring-opacity-50;
+            border: none;
+            color: #ffffff; /* Changed to white text for contrast */
+            text-shadow: none;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .btn-blue { /* For music toggles, etc. */
+            /* Adjusted for better contrast */
+            @apply bg-gradient-to-br from-blue-700 to-blue-800 hover:from-blue-800 hover:to-blue-900 text-white font-semibold py-3 px-6 rounded-md transition duration-200 ease-in-out transform hover:translate-y-[-2px] focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-opacity-50;
+            border: none;
+            color: #f0f0f0; /* Brighter white for contrast */
+            text-shadow: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+        .input-field, .dropdown {
+            @apply bg-gray-800 text-gray-200 px-5 py-3 rounded-md border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50;
+            box-shadow: none;
+            text-shadow: none;
+        }
+        .welcome-text {
+            font-family: 'Press Start 2P', cursive, sans-serif;
+            animation: fadeInScale 2s ease-out forwards;
+            opacity: 0;
+            transform: scale(0.8);
+            color: #ffd700;
+            text-shadow: 0 0 5px rgba(255,215,0,0.3);
+            font-size: 5rem;
+            line-height: 1;
+        }
+        @keyframes fadeInScale {
+            0% { opacity: 0; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        .modal {
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+        .modal-content {
+            background-color: #2a2a2a;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+            border-radius: 0.75rem;
+            color: #e0e0e0;
+            text-shadow: none;
+        }
+        .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+        .score-card-item {
+            @apply flex justify-between items-center bg-gray-700 p-4 rounded-md mb-3 border border-gray-600;
+            box-shadow: none;
+            color: #e0e0e0;
+            text-shadow: none;
+        }
+        .score-card-item .text-green-400 {
+            color: #28a745;
+            text-shadow: none;
+        }
+        .option-button {
+            @apply w-full py-4 px-8 my-2 rounded-md text-xl font-semibold transition duration-200 ease-in-out transform hover:scale-102;
+            background-color: #333333;
+            color: #e0e0e0;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: none;
+            text-shadow: none;
+        }
+        .option-button:hover {
+            background-color: #444444;
+            border-color: rgba(255,255,255,0.2);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .option-button.correct {
+            background-color: #28a745;
+            background-image: none;
+            border-color: #28a745;
+            box-shadow: none;
+            color: #ffffff;
+        }
+        .option-button.wrong {
+            background-color: #dc3545;
+            background-image: none;
+            border-color: #dc3545;
+            box-shadow: none;
+            color: #ffffff;
+        }
+        .option-button.disabled {
+            opacity: 0.5;
+            background-color: #444444;
+            border-color: #555;
+            box-shadow: none;
+            cursor: not-allowed;
+            text-shadow: none;
+            color: #aaaaaa;
+        }
+        .lifeline-button {
+            @apply bg-gradient-to-br from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-semibold py-3 px-6 rounded-md transition duration-200 ease-in-out transform hover:translate-y-[-2px];
+            border: none;
+            color: #ffffff;
+            text-shadow: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .lifeline-button.used {
+            @apply bg-gray-700 border-gray-600 text-gray-400 cursor-not-allowed shadow-none;
+            background-image: none;
+            text-shadow: none;
+            box-shadow: none;
+        }
+        .text-yellow-400 {
+            font-family: 'Press Start 2P', cursive, sans-serif;
+            color: #ffd700;
+            text-shadow: 0 0 5px rgba(255,215,0,0.3);
+        }
+        .text-gray-400 {
+            color: #e0e0e0;
+            text-shadow: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <!-- Global Navigation Buttons -->
+        <div id="global-nav" class="absolute top-4 left-4 flex space-x-2 z-50">
+            <button id="goToMainMenuBtnGlobal" class="btn-yellow text-sm px-4 py-2 rounded-lg" style="display: none;">
+                <i class="fas fa-home mr-1"></i> Main Menu
+            </button>
+            <button id="goToSettingsMenuBtnGlobal" class="btn-yellow text-sm px-4 py-2 rounded-lg" style="display: none;">
+                <i class="fas fa-cog mr-1"></i> Settings
+            </button>
+            <button id="goToMainGameBtnGlobal" class="btn-yellow text-sm px-4 py-2 rounded-lg" style="display: none;">
+                <i class="fas fa-play mr-1"></i> Game
+            </button>
+        </div>
+
+        <!-- Custom Modal for Alerts/Confirmations -->
+        <div id="customModal" class="modal">
+            <div class="modal-content">
+                <h3 id="modalTitle" class="text-2xl font-bold mb-4"></h3>
+                <p id="modalMessage" class="mb-6"></p>
+                <div id="modalButtons" class="modal-buttons">
+                    <!-- Buttons will be injected here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Menu Section -->
+        <div id="main-menu" class="section active">
+            <h1 class="welcome-text font-extrabold mb-8">
+                Welcome and Enjoy 😉
+            </h1>
+            <div class="space-y-4">
+                <button id="goToSettingsMenuBtn" class="btn">
+                    <i class="fas fa-cog mr-2"></i> Go to Settings Menu
+                </button>
+                <button id="goToDifficultySelectionBtn" class="btn">
+                    <i class="fas fa-play-circle mr-2"></i> Start New Game
+                </button>
+            </div>
+        </div>
+
+        <!-- Difficulty Selection Section -->
+        <div id="difficulty-selection" class="section">
+            <h2 class="text-4xl font-bold mb-8">Choose Difficulty 😬</h2>
+            <div class="mb-8">
+                <select id="difficultyDropdown" class="dropdown w-64">
+                    <option value="noob">Noob</option>
+                    <option value="elementary">Elementary</option>
+                    <option value="intermediate">Intermediate</option>
+                    <option value="advance">Advance</option>
+                    <option value="expert">Expert</option>
+                </select>
+            </div>
+            <button id="proceedToAddTeamBtn" class="btn">
+                <i class="fas fa-arrow-right mr-2"></i> Proceed to Add Team
+            </button>
+        </div>
+
+        <!-- Add Team Section -->
+        <div id="add-team-section" class="section">
+            <h2 class="text-4xl font-bold mb-8">Add Team 🙋🏽‍♀️🙋🏽‍♂️</h2>
+            <div id="teamsContainer" class="mb-6 w-full max-w-md space-y-4">
+                <!-- Team input fields will be added here -->
+            </div>
+            <div class="flex space-x-4 mb-8">
+                <button id="addTeamBtn" class="btn-green">
+                    <i class="fas fa-plus mr-2"></i> Add Team
+                </button>
+                <button id="removeTeamBtn" class="btn-red">
+                    <i class="fas fa-minus mr-2"></i> Remove Last Team
+                </button>
+            </div>
+            <button id="nextToReadyBtn" class="btn">
+                <i class="fas fa-forward mr-2"></i> Next
+            </button>
+        </div>
+
+        <!-- Are You Ready Section -->
+        <div id="are-you-ready-section" class="section">
+            <h2 class="text-4xl font-bold mb-8">Are You Ready? 🥱</h2>
+            <div class="flex space-x-4">
+                <button id="yesReadyBtn" class="btn-green">
+                    <i class="fas fa-check mr-2"></i> Yes
+                </button>
+                <button id="noReadyBtn" class="btn-red">
+                    <i class="fas fa-times mr-2"></i> No
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Game Section -->
+        <div id="game-section" class="section flex-row items-stretch justify-center p-4">
+            <!-- Scorecard (Left Side) -->
+            <div class="w-1/4 bg-gray-800 p-4 rounded-xl shadow-lg mr-4 flex flex-col justify-start items-center">
+                <h3 class="text-3xl font-bold mb-4 text-center">Scoreboard</h3>
+                <div id="scorecard" class="w-full">
+                    <!-- Team scores will be displayed here -->
+                </div>
+                <div class="mt-auto pt-4 border-t border-gray-700 w-full text-center">
+                    <h4 class="text-xl font-semibold mb-2">Game Master Controls</h4>
+                    <button id="resetGameBtn" class="btn-red w-full">
+                        <i class="fas fa-sync-alt mr-2"></i> Reset Game
+                    </button>
+                </div>
+            </div>
+
+            <!-- Q&A Content (Middle) -->
+            <div class="w-3/4 bg-gray-800 p-6 rounded-xl shadow-lg flex flex-col justify-between items-center">
+                <div class="w-full text-center mb-4">
+                    <h3 class="text-2xl font-bold text-gray-400">Level: <span id="currentLevelDisplay">1</span></h3>
+                    <h3 class="text-2xl font-bold text-gray-400">Question: <span id="currentQuestionNumberDisplay">1</span>/10</h3>
+                    <div class="text-5xl font-extrabold text-yellow-400 my-4">
+                        <span id="timerDisplay">60</span>s
+                    </div>
+                </div>
+
+                <div class="w-full mb-6">
+                    <p id="questionText" class="text-3xl font-semibold mb-8 text-center"></p>
+                    <div id="optionsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <button class="option-button" data-option="A">A: <span id="optionAContent"></span></button>
+                        <button class="option-button" data-option="B">B: <span id="optionBContent"></span></button>
+                        <button class="option-button" data-option="C">C: <span id="optionCContent"></span></button>
+                        <button class="option-button" data-option="D">D: <span id="optionDContent"></span></button>
+                    </div>
+                </div>
+
+                <div class="w-full flex justify-between items-center mt-auto pt-4 border-t border-gray-700">
+                    <div class="flex space-x-2">
+                        <button id="fiftyFiftyBtn" class="lifeline-button">
+                            <i class="fas fa-percent mr-1"></i> 50:50 (<span id="fiftyFiftyCount">3</span>)
+                        </button>
+                    </div>
+                    <button id="nextQuestionBtn" class="btn-green" style="display: none;">
+                        <i class="fas fa-arrow-right mr-2"></i> Next Question
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Section -->
+        <div id="settings-section" class="section">
+            <h2 class="text-4xl font-bold mb-8">Settings</h2>
+            <div class="space-y-6 w-full max-w-md">
+                <div class="flex flex-col items-center">
+                    <h3 class="text-2xl font-bold mb-2">Question Management</h3>
+                    <button id="downloadTemplateBtn" class="btn w-full mb-4">
+                        <i class="fas fa-download mr-2"></i> Download Excel Template
+                    </button>
+                    <label for="uploadQuestionsInput" class="btn w-full cursor-pointer">
+                        <i class="fas fa-upload mr-2"></i> Upload Questions (Excel)
+                    </label>
+                    <input type="file" id="uploadQuestionsInput" accept=".xlsx, .xls" class="hidden">
+                    <p class="text-sm mt-2 text-gray-400">
+                        Upload separate Excel files for each difficulty (e.g., "noob.xlsx", "expert.xlsx").
+                        The game will automatically categorize questions based on filename.
+                    </p>
+                    <p id="uploadStatus" class="text-sm mt-2"></p>
+                </div>
+
+                <div class="flex flex-col items-center">
+                    <h3 class="text-2xl font-bold mb-2">Music Controls</h3>
+                    <div class="w-full flex items-center mb-2">
+                        <label for="mainMusicVolume" class="w-1/3 text-left">Main Game Volume:</label>
+                        <input type="range" id="mainMusicVolume" min="0" max="1" step="0.01" value="0.5" class="w-2/3">
+                    </div>
+                    <div class="w-full flex items-center mb-2">
+                        <label for="sfxVolume" class="w-1/3 text-left">SFX Volume:</label>
+                        <input type="range" id="sfxVolume" min="0" max="1" step="0.01" value="0.7" class="w-2/3">
+                    </div>
+                    <div class="w-full flex items-center justify-center space-x-4 mt-4">
+                        <button id="toggleMenuMusicBtn" class="btn-blue">
+                            <i class="fas fa-music mr-2"></i> Toggle Menu Music
+                        </button>
+                        <button id="toggleMainGameMusicBtn" class="btn-blue">
+                            <i class="fas fa-gamepad mr-2"></i> Toggle Game Music
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global game state variables
+        let currentSection = 'main-menu';
+        let teams = [];
+        let questions = {}; // Stores questions by difficulty
+        let currentDifficulty = 'noob';
+        let currentLevel = 1;
+        let currentQuestionIndex = 0; // Index within the shuffled questions for the current level
+        let shuffledQuestions = []; // Questions for the current game, shuffled
+        let timerInterval;
+        let timeLeft;
+        let fiftyFiftyUsedCount = 3; // Changed to 3 for multiple uses per level
+        let questionAnswered = false; // To prevent multiple answers/clicks
+        let hasUserInteracted = false; // Flag for audio playback
+
+        // Audio objects
+        // Using a function to create Audio objects to ensure consistent error handling and logging
+        function createAudio(src) {
+            const audioObj = new Audio(src);
+            audioObj.onerror = (e) => {
+                console.error(`Error loading audio file ${src}:`, e);
+                // Optionally, show a modal to the user, but avoid too many pop-ups
+                // showModal('Audio Error', `Could not load audio file: ${src}. Please ensure the file exists and is a valid MP3.`);
+            };
+            console.log(`Attempting to load audio: ${src}`); // Log the path
+            return audioObj;
+        }
+
+        const audio = {
+            menu: createAudio('music/menu.mp3'),
+            maingameLoop: createAudio('music/maingame-loop.mp3'),
+            correctAns: createAudio('music/corret_ans.mp3'),
+            wrongAns: createAudio('music/wrong_ans.mp3')
+        };
+
+        // Set audio loop properties
+        audio.menu.loop = true;
+        audio.maingameLoop.loop = true;
+
+        // Default volumes
+        audio.menu.volume = 0.5;
+        audio.maingameLoop.volume = 0.5;
+        audio.correctAns.volume = 0.7;
+        audio.wrongAns.volume = 0.7;
+
+        // Question points per level
+        const pointsPerLevel = {
+            1: 10,
+            2: 20,
+            3: 30,
+            4: 40,
+            5: 50
+        };
+
+        // Timer durations per level
+        const timerDurations = {
+            1: 60,
+            2: 50,
+            3: 40,
+            4: 30,
+            5: 20
+        };
+
+        // --- DOM Elements ---
+        const sections = document.querySelectorAll('.section');
+        const customModal = document.getElementById('customModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalMessage = document.getElementById('modalMessage');
+        const modalButtons = document.getElementById('modalButtons');
+
+        // Global Nav Buttons
+        const goToMainMenuBtnGlobal = document.getElementById('goToMainMenuBtnGlobal');
+        const goToSettingsMenuBtnGlobal = document.getElementById('goToSettingsMenuBtnGlobal');
+        const goToMainGameBtnGlobal = document.getElementById('goToMainGameBtnGlobal');
+
+        // Main Menu
+        const goToSettingsMenuBtn = document.getElementById('goToSettingsMenuBtn');
+        const goToDifficultySelectionBtn = document.getElementById('goToDifficultySelectionBtn');
+
+        // Difficulty Selection
+        const difficultyDropdown = document.getElementById('difficultyDropdown');
+        const proceedToAddTeamBtn = document.getElementById('proceedToAddTeamBtn');
+
+        // Add Team Section
+        const teamsContainer = document.getElementById('teamsContainer');
+        const addTeamBtn = document.getElementById('addTeamBtn');
+        const removeTeamBtn = document.getElementById('removeTeamBtn');
+        const nextToReadyBtn = document.getElementById('nextToReadyBtn');
+
+        // Are You Ready
+        const yesReadyBtn = document.getElementById('yesReadyBtn');
+        const noReadyBtn = document.getElementById('noReadyBtn');
+
+        // Game Section
+        const scorecard = document.getElementById('scorecard');
+        const resetGameBtn = document.getElementById('resetGameBtn');
+        const currentLevelDisplay = document.getElementById('currentLevelDisplay');
+        const currentQuestionNumberDisplay = document.getElementById('currentQuestionNumberDisplay');
+        const timerDisplay = document.getElementById('timerDisplay');
+        const questionText = document.getElementById('questionText');
+        const optionsContainer = document.getElementById('optionsContainer');
+        const optionButtons = optionsContainer.querySelectorAll('.option-button');
+        const fiftyFiftyBtn = document.getElementById('fiftyFiftyBtn');
+        const fiftyFiftyCountDisplay = document.getElementById('fiftyFiftyCount');
+        const nextQuestionBtn = document.getElementById('nextQuestionBtn');
+
+        // Settings Section
+        const downloadTemplateBtn = document.getElementById('downloadTemplateBtn');
+        const uploadQuestionsInput = document.getElementById('uploadQuestionsInput');
+        const uploadStatus = document.getElementById('uploadStatus');
+        const mainMusicVolume = document.getElementById('mainMusicVolume');
+        const sfxVolume = document.getElementById('sfxVolume');
+        const toggleMenuMusicBtn = document.getElementById('toggleMenuMusicBtn');
+        const toggleMainGameMusicBtn = document.getElementById('toggleMainGameMusicBtn');
+
+        // --- Utility Functions ---
+
+        /**
+         * Displays a custom modal message.
+         * @param {string} title - The title of the modal.
+         * @param {string} message - The message content.
+         * @param {Array<{text: string, className: string, onClick: Function}>} buttons - Array of button objects.
+         */
+        function showModal(title, message, buttons = [{ text: 'OK', className: 'btn', onClick: hideModal }]) {
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+            modalButtons.innerHTML = ''; // Clear previous buttons
+            buttons.forEach(btnConfig => {
+                const button = document.createElement('button');
+                button.textContent = btnConfig.text;
+                button.className = btnConfig.className;
+                button.onclick = () => {
+                    btnConfig.onClick();
+                    hideModal(); // Hide modal after button click
+                };
+                modalButtons.appendChild(button);
+            });
+            customModal.style.display = 'flex';
+        }
+
+        /** Hides the custom modal. */
+        function hideModal() {
+            customModal.style.display = 'none';
+        }
+
+        /**
+         * Shuffles an array in place (Fisher-Yates algorithm).
+         * @param {Array} array - The array to shuffle.
+         * @returns {Array} The shuffled array.
+         */
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        /**
+         * Shows a specific section and hides others.
+         * Also manages global navigation button visibility.
+         * @param {string} sectionId - The ID of the section to show.
+         */
+        function showSection(sectionId) {
+            currentSection = sectionId;
+            sections.forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(sectionId).classList.add('active');
+
+            // Manage global nav buttons visibility
+            goToMainMenuBtnGlobal.style.display = (sectionId !== 'main-menu') ? 'inline-block' : 'none';
+            goToSettingsMenuBtnGlobal.style.display = (sectionId !== 'settings-section') ? 'inline-block' : 'none';
+            goToMainGameBtnGlobal.style.display = (sectionId === 'settings-section' || sectionId === 'add-team-section' || sectionId === 'are-you-ready-section') && teams.length > 0 ? 'inline-block' : 'none';
+
+            // Manage music playback based on section, only after user interaction
+            if (hasUserInteracted) {
+                if (sectionId === 'main-menu' || sectionId === 'difficulty-selection' || sectionId === 'add-team-section' || sectionId === 'are-you-ready-section' || sectionId === 'settings-section') {
+                    audio.maingameLoop.pause();
+                    audio.maingameLoop.currentTime = 0; // Reset game music
+                    try {
+                        audio.menu.play().catch(e => console.error("Error playing menu music:", e));
+                    } catch (e) {
+                        console.error("Caught error trying to play menu music:", e);
+                    }
+                } else if (sectionId === 'game-section') {
+                    audio.menu.pause();
+                    audio.menu.currentTime = 0; // Reset menu music
+                    try {
+                        audio.maingameLoop.play().catch(e => console.error("Error playing main game music:", e));
+                    } catch (e) {
+                        console.error("Caught error trying to play main game music:", e);
+                    }
+                }
+            }
+        }
+
+        // --- Audio Control Functions ---
+        function toggleMusic(audioElement, buttonElement) {
+            if (audioElement.paused) {
+                try {
+                    audioElement.play().catch(e => console.error("Error playing music:", e));
+                    buttonElement.textContent = buttonElement.textContent.replace('Play', 'Pause');
+                } catch (e) {
+                    console.error("Caught error trying to toggle music play:", e);
+                }
+            } else {
+                audioElement.pause();
+                buttonElement.textContent = buttonElement.textContent.replace('Pause', 'Play');
+            }
+        }
+
+        function updateVolume(audioElement, volume) {
+            audioElement.volume = parseFloat(volume);
+        }
+
+        // --- Main Menu Logic ---
+        goToSettingsMenuBtn.addEventListener('click', () => {
+            hasUserInteracted = true; // Mark user interaction
+            showSection('settings-section');
+        });
+        goToDifficultySelectionBtn.addEventListener('click', () => {
+            hasUserInteracted = true; // Mark user interaction
+            showSection('difficulty-selection');
+        });
+
+        // --- Difficulty Selection Logic ---
+        proceedToAddTeamBtn.addEventListener('click', () => {
+            currentDifficulty = difficultyDropdown.value;
+            // Optionally, load questions for the selected difficulty here if not already loaded
+            showSection('add-team-section');
+        });
+
+        // --- Add Team Logic ---
+        let teamCount = 0;
+        function addTeamInput() {
+            if (teamCount >= 4) {
+                showModal('Limit Reached', 'You can add a maximum of 4 teams.');
+                return;
+            }
+            teamCount++;
+            const teamDiv = document.createElement('div');
+            teamDiv.className = 'flex items-center space-x-2';
+            teamDiv.innerHTML = `
+                <label class="text-xl font-semibold">Team ${teamCount}:</label>
+                <input type="text" id="teamName${teamCount}" placeholder="Enter team name" class="input-field flex-grow">
+            `;
+            teamsContainer.appendChild(teamDiv);
+        }
+
+        function removeTeamInput() {
+            if (teamCount <= 1) {
+                showModal('Minimum Teams', 'You need at least 1 team to play.');
+                return;
+            }
+            teamsContainer.lastChild.remove();
+            teamCount--;
+        }
+
+        addTeamBtn.addEventListener('click', addTeamInput);
+        removeTeamBtn.addEventListener('click', removeTeamInput);
+
+        // Initialize with one team input
+        addTeamInput();
+
+        nextToReadyBtn.addEventListener('click', () => {
+            teams = [];
+            let allNamesValid = true;
+            for (let i = 1; i <= teamCount; i++) {
+                const teamNameInput = document.getElementById(`teamName${i}`);
+                const name = teamNameInput.value.trim();
+                if (name === '') {
+                    allNamesValid = false;
+                    showModal('Missing Team Name', `Please enter a name for Team ${i}.`);
+                    break;
+                }
+                teams.push({ name: name, score: 0 });
+            }
+
+            if (allNamesValid) {
+                if (teams.length < 1) {
+                    showModal('No Teams', 'Please add at least one team to proceed.');
+                    return;
+                }
+                showSection('are-you-ready-section');
+            }
+        });
+
+        // --- Are You Ready Logic ---
+        yesReadyBtn.addEventListener('click', () => {
+            if (Object.keys(questions).length === 0 || !questions[currentDifficulty] || questions[currentDifficulty].length === 0) {
+                showModal('No Questions Loaded', 'Please upload questions in the settings menu before starting a game.');
+                return;
+            }
+            startGame();
+        });
+        noReadyBtn.addEventListener('click', () => showSection('add-team-section'));
+
+        // --- Game Logic ---
+
+        /** Initializes the game state and starts the first question. */
+        function startGame() {
+            currentLevel = 1;
+            currentQuestionIndex = 0;
+            fiftyFiftyUsedCount = 3; // Reset to 3 for new game
+            updateFiftyFiftyCount();
+            teams.forEach(team => team.score = 0); // Reset scores
+            updateScorecard();
+
+            // Shuffle questions for the selected difficulty
+            if (questions[currentDifficulty]) {
+                shuffledQuestions = shuffleArray([...questions[currentDifficulty]]);
+                if (shuffledQuestions.length < 50) { // 5 levels * 10 questions
+                    showModal('Not Enough Questions', `You need at least 50 questions for the "${currentDifficulty}" difficulty to play a full game. Please upload more questions.`);
+                    showSection('settings-section'); // Go to settings to upload more
+                    return;
+                }
+                // Take 50 questions for the game (10 per level * 5 levels)
+                shuffledQuestions = shuffledQuestions.slice(0, 50);
+            } else {
+                showModal('Error', 'No questions found for the selected difficulty. Please upload questions in settings.');
+                showSection('settings-section');
+                return;
+            }
+
+            showSection('game-section');
+            displayQuestion();
+        }
+
+        /** Updates the team score display. */
+        function updateScorecard() {
+            scorecard.innerHTML = '';
+            teams.forEach((team, index) => {
+                const teamScoreDiv = document.createElement('div');
+                teamScoreDiv.className = 'score-card-item';
+                teamScoreDiv.innerHTML = `
+                    <span class="text-xl font-semibold">${team.name}:</span>
+                    <span class="text-2xl font-bold text-green-400">${team.score}</span>
+                    <button class="btn-green text-sm px-3 py-1 rounded-lg add-points-btn" data-team-index="${index}">
+                        <i class="fas fa-plus mr-1"></i> Add Points
+                    </button>
+                `;
+                scorecard.appendChild(teamScoreDiv);
+            });
+
+            // Attach event listeners to new add points buttons
+            document.querySelectorAll('.add-points-btn').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const teamIndex = parseInt(event.currentTarget.dataset.teamIndex);
+                    const pointsToAdd = pointsPerLevel[currentLevel];
+                    showModal(
+                        'Add Points',
+                        `Add ${pointsToAdd} points to ${teams[teamIndex].name}?`,
+                        [
+                            { text: 'Yes', className: 'btn-green', onClick: () => {
+                                teams[teamIndex].score += pointsToAdd;
+                                updateScorecard();
+                                showModal('Points Added', `${pointsToAdd} points added to ${teams[teamIndex].name}.`);
+                            }},
+                            { text: 'No', className: 'btn-red', onClick: hideModal }
+                        ]
+                    );
+                });
+            });
+        }
+
+        /** Displays the current question and options. */
+        function displayQuestion() {
+            clearInterval(timerInterval); // Clear any existing timer
+            questionAnswered = false;
+            nextQuestionBtn.style.display = 'none';
+
+            // Reset option button styles and enable them
+            optionButtons.forEach(button => {
+                button.classList.remove('correct', 'wrong', 'disabled');
+                button.disabled = false;
+                // Ensure the span content is visible again if it was hidden by 50:50
+                const span = button.querySelector('span');
+                if (span) span.style.display = 'inline';
+            });
+
+            if (currentQuestionIndex >= shuffledQuestions.length || currentQuestionIndex >= (currentLevel * 10)) {
+                // All questions for the current level answered or game finished
+                if (currentLevel < 5) {
+                    currentLevel++;
+                    currentQuestionIndex = (currentLevel - 1) * 10; // Start index for next level's questions
+                    fiftyFiftyUsedCount = 3; // Reset 50:50 for the new level
+                    updateFiftyFiftyCount(); // Update display for new level
+                    showModal('Level Complete!', `Proceeding to Level ${currentLevel}.`);
+                    // No need to reshuffle, just move to the next segment of shuffledQuestions
+                } else {
+                    endGame();
+                    return;
+                }
+            }
+
+            const question = shuffledQuestions[currentQuestionIndex];
+            if (!question) {
+                showModal('Error', 'Could not load question. Please check uploaded questions.');
+                endGame();
+                return;
+            }
+
+            currentLevelDisplay.textContent = currentLevel;
+            currentQuestionNumberDisplay.textContent = (currentQuestionIndex % 10) + 1; // Question number within the current level
+            questionText.textContent = question.Question;
+
+            // Updated: Accessing spans within option buttons directly
+            optionButtons[0].querySelector('span').textContent = question['Option A'];
+            optionButtons[1].querySelector('span').textContent = question['Option B'];
+            optionButtons[2].querySelector('span').textContent = question['Option C'];
+            optionButtons[3].querySelector('span').textContent = question['Option D'];
+
+            console.log("Current Question:", question.Question);
+            console.log("Correct Answer (from data):", question['Correct Answer (A/B/C/D)']); // Log the exact value
+
+            startTimer(timerDurations[currentLevel]);
+        }
+
+        /** Starts the countdown timer for the current question. */
+        function startTimer(duration) {
+            timeLeft = duration;
+            timerDisplay.textContent = timeLeft;
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerDisplay.textContent = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    showModal('Time Up!', 'You ran out of time. The correct answer was ' + shuffledQuestions[currentQuestionIndex]['Correct Answer (A/B/C/D)'] + '.'); // Use correct key
+                    // Optionally, penalize or move to next question
+                    markWrongAnswer(); // Mark as wrong if time runs out
+                    nextQuestionBtn.style.display = 'block';
+                }
+            }, 1000);
+        }
+
+        /** Handles user clicking an answer option. */
+        optionsContainer.addEventListener('click', (event) => {
+            if (!event.target.classList.contains('option-button') || questionAnswered) {
+                return;
+            }
+
+            clearInterval(timerInterval); // Stop the timer
+            questionAnswered = true; // Prevent further clicks
+
+            const selectedOption = event.target.dataset.option;
+            const question = shuffledQuestions[currentQuestionIndex];
+            // FIX: Use the exact column name from the template and trim it
+            const correctAnswer = String(question['Correct Answer (A/B/C/D)']).trim();
+
+            console.log("Selected Option:", selectedOption);
+            console.log("Correct Answer (parsed):", correctAnswer);
+
+            optionButtons.forEach(button => {
+                button.disabled = true; // Disable all options after selection
+                if (button.dataset.option === correctAnswer) {
+                    button.classList.add('correct');
+                } else {
+                    button.classList.add('wrong');
+                }
+            });
+
+            if (selectedOption === correctAnswer) {
+                try {
+                    audio.correctAns.play();
+                } catch (e) {
+                    console.error("Error playing correct answer sound:", e);
+                }
+                showModal('Correct Answer!', 'Well done!');
+                // GM will manually add points via the scorecard button
+            } else {
+                try {
+                    audio.wrongAns.play();
+                } catch (e) {
+                    console.error("Error playing wrong answer sound:", e);
+                }
+                showModal('Wrong Answer!', 'Oops! The correct answer was ' + correctAnswer + '.');
+            }
+            nextQuestionBtn.style.display = 'block';
+        });
+
+        /** Helper to mark all options as wrong if time runs out or similar. */
+        function markWrongAnswer() {
+            const question = shuffledQuestions[currentQuestionIndex];
+            // FIX: Use the exact column name from the template and trim it
+            const correctAnswer = String(question['Correct Answer (A/B/C/D)']).trim();
+            optionButtons.forEach(button => {
+                button.disabled = true;
+                if (button.dataset.option === correctAnswer) {
+                    button.classList.add('correct'); // Show correct answer
+                } else {
+                    button.classList.add('wrong');
+                }
+            });
+            try {
+                audio.wrongAns.play();
+            } catch (e) {
+                console.error("Error playing wrong answer sound (from time out):", e);
+            }
+            questionAnswered = true;
+        }
+
+
+        /** Moves to the next question or ends the level/game. */
+        nextQuestionBtn.addEventListener('click', () => {
+            currentQuestionIndex++;
+            displayQuestion(); // This function handles level progression too
+        });
+
+        /** Implements the 50:50 lifeline. */
+        fiftyFiftyBtn.addEventListener('click', () => {
+            if (fiftyFiftyUsedCount <= 0) {
+                showModal('Lifeline Used', 'You have no 50:50 lifelines left for this game.');
+                return;
+            }
+            if (questionAnswered) {
+                showModal('Already Answered', 'You cannot use a lifeline after answering the question.');
+                return;
+            }
+
+            const question = shuffledQuestions[currentQuestionIndex];
+            // FIX: Use the exact column name from the template and trim it
+            const correctAnswer = String(question['Correct Answer (A/B/C/D)']).trim();
+            const options = ['A', 'B', 'C', 'D'];
+            const wrongOptions = options.filter(opt => opt !== correctAnswer);
+
+            // Randomly select two wrong options to hide
+            shuffleArray(wrongOptions);
+            const optionsToHide = wrongOptions.slice(0, 2);
+
+            optionsToHide.forEach(opt => {
+                const button = document.querySelector(`.option-button[data-option="${opt}"]`);
+                if (button) {
+                    const span = button.querySelector('span');
+                    if (span) span.style.display = 'none'; // Hide the span content
+                    button.classList.add('disabled'); // Visually disable
+                    button.disabled = true; // Make unclickable
+                }
+            });
+
+            fiftyFiftyUsedCount--;
+            updateFiftyFiftyCount();
+            fiftyFiftyBtn.classList.add('used'); // Mark lifeline button as used
+            // fiftyFiftyBtn.disabled = true; // This will be handled by updateFiftyFiftyCount based on count
+            showModal('50:50 Used!', 'Two incorrect options have been removed.');
+        });
+
+        /** Updates the 50:50 lifeline count display. */
+        function updateFiftyFiftyCount() {
+            fiftyFiftyCountDisplay.textContent = fiftyFiftyUsedCount;
+            if (fiftyFiftyUsedCount <= 0) {
+                fiftyFiftyBtn.classList.add('used');
+                fiftyFiftyBtn.disabled = true;
+            } else {
+                fiftyFiftyBtn.classList.remove('used');
+                fiftyFiftyBtn.disabled = false;
+            }
+        }
+
+        /** Ends the game and shows final scores. */
+        function endGame() {
+            clearInterval(timerInterval);
+            audio.maingameLoop.pause();
+            audio.maingameLoop.currentTime = 0;
+            const finalScores = teams.map(team => `${team.name}: ${team.score} points`).join('\n');
+            showModal('Game Over!', `The game has ended!\n\nFinal Scores:\n${finalScores}`, [
+                { text: 'Play Again', className: 'btn-green', onClick: () => showSection('difficulty-selection') },
+                { text: 'Main Menu', className: 'btn', onClick: () => showSection('main-menu') }
+            ]);
+        }
+
+        /** Resets the game to its initial state. */
+        resetGameBtn.addEventListener('click', () => {
+            showModal('Reset Game', 'Are you sure you want to reset the game? All progress will be lost.', [
+                { text: 'Yes, Reset', className: 'btn-red', onClick: () => {
+                    clearInterval(timerInterval);
+                    audio.maingameLoop.pause();
+                    audio.maingameLoop.currentTime = 0;
+                    teams = []; // Clear teams
+                    teamCount = 0; // Reset team count
+                    teamsContainer.innerHTML = ''; // Clear team inputs
+                    addTeamInput(); // Add back one default team input
+                    showSection('main-menu');
+                    console.log("Game Reset!");
+                }},
+                { text: 'No', className: 'btn', onClick: hideModal }
+            ]);
+        });
+
+        // --- Global Navigation Buttons Event Listeners ---
+        goToMainMenuBtnGlobal.addEventListener('click', () => {
+            showModal('Go to Main Menu', 'Are you sure you want to go to the Main Menu? Current game progress will be lost.', [
+                { text: 'Yes', className: 'btn-red', onClick: () => {
+                    clearInterval(timerInterval);
+                    audio.maingameLoop.pause();
+                    audio.maingameLoop.currentTime = 0;
+                    showSection('main-menu');
+                }},
+                { text: 'No', className: 'btn', onClick: hideModal }
+            ]);
+        });
+
+        goToSettingsMenuBtnGlobal.addEventListener('click', () => showSection('settings-section'));
+        goToMainGameBtnGlobal.addEventListener('click', () => {
+            if (currentSection === 'settings-section' || currentSection === 'add-team-section' || currentSection === 'are-you-ready-section') {
+                // If coming from settings/team setup, resume game if it was started
+                if (shuffledQuestions.length > 0 && teams.length > 0) {
+                    showSection('game-section');
+                    // If timer was running, restart it, otherwise just display
+                    if (timeLeft > 0 && !questionAnswered) {
+                        startTimer(timeLeft);
+                    }
+                } else {
+                    showModal('Game Not Started', 'A game has not been started yet. Please configure teams and start a new game from the main menu.');
+                    showSection('main-menu');
+                }
+            } else {
+                showSection('game-section');
+            }
+        });
+
+
+        // --- Settings Logic ---
+
+        /** Downloads a simple Excel template for questions. */
+        downloadTemplateBtn.addEventListener('click', () => {
+            const data = [
+                ["Question", "Option A", "Option B", "Option C", "Option D", "Correct Answer (A/B/C/D)"],
+                ["What is 2+2?", "3", "4", "5", "6", "B"],
+                ["Which planet is known as the Red Planet?", "Earth", "Mars", "Jupiter", "Venus", "B"]
+            ];
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Questions");
+            XLSX.writeFile(wb, "MCQ_Questions_Template.xlsx");
+        });
+
+        /** Handles uploading and parsing of Excel question files. */
+        uploadQuestionsInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) {
+                uploadStatus.textContent = 'No file selected.';
+                return;
+            }
+
+            uploadStatus.textContent = 'Uploading and processing...';
+            const reader = new FileReader();
+
+            reader.onload = (e) => {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const sheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[sheetName];
+                    const json = XLSX.utils.sheet_to_json(worksheet);
+
+                    if (json.length === 0) {
+                        showModal('Upload Error', 'The uploaded Excel file is empty or has no data.');
+                        uploadStatus.textContent = 'File is empty.';
+                        return;
+                    }
+
+                    // Validate columns
+                    const requiredHeaders = ["Question", "Option A", "Option B", "Option C", "Option D", "Correct Answer (A/B/C/D)"];
+                    const actualHeaders = Object.keys(json[0]);
+                    const missingHeaders = requiredHeaders.filter(header => !actualHeaders.includes(header));
+
+                    if (missingHeaders.length > 0) {
+                        showModal('Upload Error', `Missing required columns in Excel file: ${missingHeaders.join(', ')}. Please use the provided template.`);
+                        uploadStatus.textContent = 'Missing required columns.';
+                        return;
+                    }
+
+                    // Determine difficulty from filename (e.g., noob.xlsx -> noob)
+                    const fileName = file.name.toLowerCase();
+                    let difficultyFromFileName = 'custom'; // Default if not matched
+                    if (fileName.includes('noob')) difficultyFromFileName = 'noob';
+                    else if (fileName.includes('elementary')) difficultyFromFileName = 'elementary';
+                    else if (fileName.includes('intermediate')) difficultyFromFileName = 'intermediate';
+                    else if (fileName.includes('advance')) difficultyFromFileName = 'advance';
+                    else if (fileName.includes('expert')) difficultyFromFileName = 'expert';
+
+                    questions[difficultyFromFileName] = json;
+                    uploadStatus.textContent = `Successfully loaded ${json.length} questions for "${difficultyFromFileName}" difficulty.`;
+                    showModal('Upload Successful', `Successfully loaded ${json.length} questions for "${difficultyFromFileName}" difficulty.`);
+
+                    // If the difficulty dropdown doesn't have this option, add it
+                    if (!Array.from(difficultyDropdown.options).some(option => option.value === difficultyFromFileName)) {
+                        const newOption = document.createElement('option');
+                        newOption.value = difficultyFromFileName;
+                        newOption.textContent = difficultyFromFileName.charAt(0).toUpperCase() + difficultyFromFileName.slice(1);
+                        difficultyDropdown.appendChild(newOption);
+                    }
+
+                } catch (e) {
+                    console.error("Error reading Excel file:", e);
+                    showModal('Upload Error', 'Failed to read Excel file. Please ensure it is a valid .xlsx or .xls file and follows the correct format.');
+                    uploadStatus.textContent = 'Error processing file.';
+                }
+            };
+
+            reader.readAsArrayBuffer(file);
+        });
+
+        // Music volume controls
+        mainMusicVolume.addEventListener('input', (event) => {
+            updateVolume(audio.maingameLoop, event.target.value);
+            updateVolume(audio.menu, event.target.value); // Menu music also uses this slider
+        });
+
+        sfxVolume.addEventListener('input', (event) => {
+            updateVolume(audio.correctAns, event.target.value);
+            updateVolume(audio.wrongAns, event.target.value);
+        });
+
+        toggleMenuMusicBtn.addEventListener('click', () => toggleMusic(audio.menu, toggleMenuMusicBtn));
+        toggleMainGameMusicBtn.addEventListener('click', () => toggleMusic(audio.maingameLoop, toggleMainGameMusicBtn));
+
+
+        // --- Initial Setup ---
+        document.addEventListener('DOMContentLoaded', () => {
+            showSection('main-menu');
+            // Pre-load dummy questions for initial testing if no files are uploaded
+            if (Object.keys(questions).length === 0) {
+                questions['noob'] = Array.from({ length: 50 }, (_, i) => ({
+                    "Question": `Noob Question ${i + 1}: What is ${i + 1} + 1?`,
+                    "Option A": `${i + 1}`,
+                    "Option B": `${i + 2}`,
+                    "Option C": `${i + 3}`,
+                    "Option D": `${i + 4}`,
+                    "Correct Answer (A/B/C/D)": "B"
+                }));
+                questions['elementary'] = Array.from({ length: 50 }, (_, i) => ({
+                    "Question": `Elementary Question ${i + 1}: What is the capital of France?`,
+                    "Option A": "London",
+                    "Option B": "Berlin",
+                    "Option C": "Paris",
+                    "Option D": "Rome",
+                    "Correct Answer (A/B/C/D)": "C"
+                }));
+                 questions['intermediate'] = Array.from({ length: 50 }, (_, i) => ({
+                    "Question": `Intermediate Question ${i + 1}: Who painted the Mona Lisa?`,
+                    "Option A": "Vincent van Gogh",
+                    "Option B": "Pablo Picasso",
+                    "Option C": "Leonardo da Vinci",
+                    "Option D": "Claude Monet",
+                    "Correct Answer (A/B/C/D)": "C"
+                }));
+                 questions['advance'] = Array.from({ length: 50 }, (_, i) => ({
+                    "Question": `Advance Question ${i + 1}: What is the chemical symbol for gold?`,
+                    "Option A": "Ag",
+                    "Option B": "Au",
+                    "Option C": "Fe",
+                    "Option D": "Pb",
+                    "Correct Answer (A/B/C/D)": "B"
+                }));
+                 questions['expert'] = Array.from({ length: 50 }, (_, i) => ({
+                    "Question": `Expert Question ${i + 1}: What is the smallest prime number?`,
+                    "Option A": "0",
+                    "Option B": "1",
+                    "Option C": "2",
+                    "Option D": "3",
+                    "Correct Answer (A/B/C/D)": "C"
+                }));
+                console.log("Dummy questions loaded for initial run. Please upload your own Excel files for real questions.");
+            }
+        });
+    </script>
+</body>
+</html>
